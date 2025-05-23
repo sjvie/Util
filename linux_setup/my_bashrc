@@ -16,47 +16,21 @@ BLINK="\[$(tput blink)\]"
 REVERSE="\[$(tput smso)\]"
 UNDERLINE="\[$(tput smul)\]"
 
+# properly escaped colors for awk
+AWK_RED="\\[$(tput setaf 1)\\]"
+AWK_NORMAL="\\[$(tput sgr0)\\]"
+
 # Display an alert when any partition is above this threshold
 DISK_FULL_ALERT_THRESHOLD=90
-# Pass shell variables to awk using -v
-# Inside awk, we'll remove the \[ and \] sequences
-message=$(df -h | awk -v THRESHOLD="$DISK_FULL_ALERT_THRESHOLD" \
-                        -v red_esc="$RED" \
-                        -v normal_esc="$NORMAL" '
-    # Function to remove \[ and \] from color codes
-    function sanitize_color(color_code) {
-        gsub(/\\[\[\\]/, "", color_code) # Remove literal \[
-        gsub(/\\[\]\\]/, "", color_code) # Remove literal \]
-        # A more robust gsub to remove both:
-        # gsub(/\\\[|\\\]/, "", color_code)
-        return color_code
-    }
-
-    BEGIN {
-        # Sanitize colors once
-        # In awk, \\ represents a literal backslash in a regex,
-        # so \\\[ matches the string \[ and \\\] matches \]
-        gsub(/\\\[|\\\]/, "", red_esc)
-        gsub(/\\\[|\\\]/, "", normal_esc)
-    }
-
+message=$(df -h | awk -v THRESHOLD="$DISK_FULL_ALERT_THRESHOLD" '
     NR == 1 {next}
     $1 == "abc:/xyz/pqr" {next}
     $1 == "tmpfs" {next}
     $1 == "/dev/cdrom" {next}
-
-    # This block applies to all lines that haven't been skipped
-    {
-        # Remove % from the 5th field (e.g., "90%") to make it "90"
-        # This must be done before the numeric comparison
-        sub(/%/, "", $5)
-    }
-
-    # Now perform the numeric comparison
-    $5 >= THRESHOLD {
-        printf "%sWARNING:%s %s is almost full: %d%%\n", red_esc, normal_esc, $1, $5
-    }
+    1 {sub(/%/,"",$5)}
+    $5 >= THRESHOLD {printf "'"${AWK_RED}"'WARNING:'"${AWK_NORMAL}"' %s is almost full: %d%%\n", $1, $5}
 ')
+
 if [ -n "$message" ]; then
   echo "$message"
 fi
