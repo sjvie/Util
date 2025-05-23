@@ -1,0 +1,52 @@
+######## sjvie CUSTOM ~/.bashrc
+# ----------------------------------------
+
+BLACK=$(tput setaf 0)
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+LIME_YELLOW=$(tput setaf 190)
+POWDER_BLUE=$(tput setaf 153)
+BLUE=$(tput setaf 4)
+MAGENTA=$(tput setaf 5)
+CYAN=$(tput setaf 6)
+WHITE=$(tput setaf 7)
+BRIGHT=$(tput bold)
+NORMAL=$(tput sgr0)
+BLINK=$(tput blink)
+REVERSE=$(tput smso)
+UNDERLINE=$(tput smul)
+
+# Display an alert when any partition is above this threshold
+DISK_FULL_ALERT_THRESHOLD=90
+message=$(df -h | awk -v THRESHOLD="$DISK_FULL_ALERT_THRESHOLD" '
+    NR == 1 {next}
+    $1 == "abc:/xyz/pqr" {next}
+    $1 == "tmpfs" {next}
+    $1 == "/dev/cdrom" {next}
+    1 {sub(/%/,"",$5)}
+    $5 >= THRESHOLD {printf "'"${RED}"'WARNING:'"${NORMAL}"' %s is almost full: %d%%\n", $1, $5}
+')
+if [ -n "$message" ]; then
+  echo "$message"
+fi
+unset DISK_FULL_ALERT_THRESHOLD
+
+# Set the prompt.
+function bash_prompt(){
+    PS1="${debian_chroot:+($debian_chroot)}${GREEN}\u@\h${NORMAL}:${BLUE}\w${NORMAL}\$ "
+}
+bash_prompt
+
+# some aliases
+alias l='ls -lF'
+alias ll='ls -lF'
+alias la='ls -lAF'
+
+alias .='pwd'
+alias ..='cd ..;pwd'
+alias ...='cd ../..;pwd'
+alias ....='cd ../../..;pwd'
+
+# ----------------------------------------
+######## END sjvie CUSTOM ~/.bashrc
