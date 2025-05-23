@@ -16,9 +16,9 @@ BLINK="\[$(tput blink)\]"
 REVERSE="\[$(tput smso)\]"
 UNDERLINE="\[$(tput smul)\]"
 
-# properly escaped colors for awk
-AWK_RED="\\[$(tput setaf 1)\\]"
-AWK_NORMAL="\\[$(tput sgr0)\\]"
+# colors for awk
+AWK_RED="$(tput setaf 1)"
+AWK_NORMAL="$(tput sgr0)"
 
 # Display an alert when any partition is above this threshold
 DISK_FULL_ALERT_THRESHOLD=90
