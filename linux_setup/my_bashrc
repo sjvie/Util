@@ -47,9 +47,10 @@ alias l='ls -lF'
 alias ll='ls -lF'
 alias la='ls -lAF'
 
-alias .='pwd'
-alias ..='cd ..;pwd'
-alias ...='cd ../..;pwd'
-alias ....='cd ../../..;pwd'
+# disabled because it causes more problems than it solves
+# alias .='pwd'
+# alias ..='cd ..;pwd'
+# alias ...='cd ../..;pwd'
+# alias ....='cd ../../..;pwd'
 
 # ----------------------------------------
