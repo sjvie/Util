@@ -20,29 +20,35 @@ mkdir -p "$CLAUDE_DIR"
 
 # Function to check and warn about existing files
 check_and_warn() {
-    local file_path="$1"
-    local file_name="$2"
-    local show_content="${3:-true}"
+    local downloaded_file="$1"
+    local existing_file="$2"
+    local file_name="$3"
 
-    if [ -f "$file_path" ]; then
-        echo ""
-        echo "⚠️  WARNING: $file_name already exists at $file_path"
-        echo ""
-        if [ "$show_content" = "true" ]; then
+    if [ -f "$existing_file" ]; then
+        # Compare files
+        if cmp -s "$downloaded_file" "$existing_file"; then
+            # Files are identical
+            echo "✓ $file_name is up to date (no changes needed)"
+            return 1
+        else
+            # Files are different
+            echo ""
+            echo "⚠️  WARNING: $file_name has been modified"
+            echo ""
             echo "Current file content:"
             echo "---"
-            head -20 "$file_path"
-            if [ $(wc -l < "$file_path") -gt 20 ]; then
-                echo "... ($(wc -l < "$file_path") total lines)"
+            head -20 "$existing_file"
+            if [ $(wc -l < "$existing_file") -gt 20 ]; then
+                echo "... ($(wc -l < "$existing_file") total lines)"
             fi
             echo "---"
             echo ""
-        fi
-        read -p "Overwrite? (y/n): " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "Skipping $file_name"
-            return 1
+            read -p "Overwrite with new version? (y/n): " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                echo "Keeping existing $file_name"
+                return 1
+            fi
         fi
     fi
     return 0
@@ -65,16 +71,16 @@ fi
 # Check existing files
 echo ""
 echo "=== Checking existing files ==="
-check_and_warn "$CLAUDE_DIR/CLAUDE.md" "CLAUDE.md" && {
+check_and_warn "$TMP_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md" "CLAUDE.md" && {
     echo "Installing CLAUDE.md..."
     cp "$TMP_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
-} || echo "Keeping existing CLAUDE.md"
+}
 
-check_and_warn "$CLAUDE_DIR/statusline-command.sh" "statusline-command.sh" && {
+check_and_warn "$TMP_DIR/statusline-command.sh" "$CLAUDE_DIR/statusline-command.sh" "statusline-command.sh" && {
     echo "Installing statusline-command.sh..."
     cp "$TMP_DIR/statusline-command.sh" "$CLAUDE_DIR/statusline-command.sh"
     chmod +x "$CLAUDE_DIR/statusline-command.sh"
-} || echo "Keeping existing statusline-command.sh"
+}
 
 # Plugin configuration
 echo ""
@@ -99,11 +105,11 @@ declare -A plugin_descriptions=(
 )
 
 # Read current settings to get defaults
-if [ -f "$SCRIPT_DIR/settings.json" ]; then
-    current_model=$(grep -o '"model"[[:space:]]*:[[:space:]]*"[^"]*"' "$SCRIPT_DIR/settings.json" | cut -d'"' -f4)
+if [ -f "$CLAUDE_DIR/settings.json" ]; then
+    current_model=$(grep -o '"model"[[:space:]]*:[[:space:]]*"[^"]*"' "$CLAUDE_DIR/settings.json" | cut -d'"' -f4)
     declare -A enabled_plugins
     for plugin in "${plugins[@]}"; do
-        if grep -q "\"$plugin@claude-plugins-official\"[[:space:]]*:[[:space:]]*true" "$SCRIPT_DIR/settings.json"; then
+        if grep -q "\"$plugin@claude-plugins-official\"[[:space:]]*:[[:space:]]*true" "$CLAUDE_DIR/settings.json"; then
             enabled_plugins[$plugin]=true
         else
             enabled_plugins[$plugin]=false
