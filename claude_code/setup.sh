@@ -293,14 +293,7 @@ fi
 
 echo ""
 echo "Configuration directory: $CLAUDE_DIR"
-echo ""
-echo "Enabled plugins:"
-for plugin in "${plugins[@]}"; do
-    if [ "${enabled_plugins[$plugin]}" = "true" ]; then
-        echo "  ✓ $plugin"
-    fi
-done
-echo ""
 if [ ${#installed_files[@]} -gt 0 ]; then
+    echo ""
     echo "Restart Claude Code to load the new configuration"
 fi
