@@ -203,18 +203,28 @@ done
 echo ""
 model_choice="$current_model"
 
+# Track installation results
+declare -a installed_files=()
+declare -a skipped_files=()
+
 # ===== CHECK EXISTING FILES AND WARN =====
 echo "=== Checking existing files ==="
-check_and_warn "$TMP_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md" "CLAUDE.md" && {
+if check_and_warn "$TMP_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md" "CLAUDE.md"; then
     echo "Installing CLAUDE.md..."
     cp "$TMP_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
-}
+    installed_files+=("CLAUDE.md")
+else
+    skipped_files+=("CLAUDE.md")
+fi
 
-check_and_warn "$TMP_DIR/statusline-command.sh" "$CLAUDE_DIR/statusline-command.sh" "statusline-command.sh" && {
+if check_and_warn "$TMP_DIR/statusline-command.sh" "$CLAUDE_DIR/statusline-command.sh" "statusline-command.sh"; then
     echo "Installing statusline-command.sh..."
     cp "$TMP_DIR/statusline-command.sh" "$CLAUDE_DIR/statusline-command.sh"
     chmod +x "$CLAUDE_DIR/statusline-command.sh"
-}
+    installed_files+=("statusline-command.sh")
+else
+    skipped_files+=("statusline-command.sh")
+fi
 
 # Generate settings.json to temp file first
 cat > "$TMP_DIR/settings.json" << EOF
@@ -252,18 +262,37 @@ cat >> "$TMP_DIR/settings.json" << EOF
 EOF
 
 # Check and install settings.json
-check_and_warn "$TMP_DIR/settings.json" "$CLAUDE_DIR/settings.json" "settings.json" && {
+if check_and_warn "$TMP_DIR/settings.json" "$CLAUDE_DIR/settings.json" "settings.json"; then
     echo "Installing settings.json..."
     cp "$TMP_DIR/settings.json" "$CLAUDE_DIR/settings.json"
-}
+    installed_files+=("settings.json")
+else
+    skipped_files+=("settings.json")
+fi
 
 echo ""
-echo "✓ Claude Code configuration installed successfully!"
+# Show summary based on what actually happened
+if [ ${#installed_files[@]} -gt 0 ]; then
+    echo "✓ Claude Code configuration updated successfully!"
+    echo ""
+    echo "Installed files:"
+    for file in "${installed_files[@]}"; do
+        echo "  ✓ $file"
+    done
+else
+    echo "✓ No changes made"
+fi
+
+if [ ${#skipped_files[@]} -gt 0 ]; then
+    echo ""
+    echo "Skipped files (no changes or declined):"
+    for file in "${skipped_files[@]}"; do
+        echo "  - $file"
+    done
+fi
+
 echo ""
-echo "Configuration files installed to: $CLAUDE_DIR"
-echo "  - CLAUDE.md (global memory/guidelines)"
-echo "  - settings.json (model, plugins, status line)"
-echo "  - statusline-command.sh (custom status line)"
+echo "Configuration directory: $CLAUDE_DIR"
 echo ""
 echo "Enabled plugins:"
 for plugin in "${plugins[@]}"; do
@@ -272,4 +301,6 @@ for plugin in "${plugins[@]}"; do
     fi
 done
 echo ""
-echo "Restart Claude Code to load the new configuration"
+if [ ${#installed_files[@]} -gt 0 ]; then
+    echo "Restart Claude Code to load the new configuration"
+fi
