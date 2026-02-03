@@ -67,7 +67,7 @@ check_and_warn() {
             echo ""
             pretty_diff "$existing_file" "$downloaded_file"
             echo ""
-            read -p "Apply these changes? (y/N): " -r response
+            read -p "Apply these changes? (y/N): " -r response < /dev/tty
             if [[ ! $response =~ ^[Yy]$ ]]; then
                 echo "Keeping existing $file_name"
                 return 1
