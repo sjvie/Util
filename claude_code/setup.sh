@@ -107,9 +107,8 @@ declare -A plugin_descriptions=(
 )
 
 # Read current settings to get defaults
+declare -A enabled_plugins
 if [ -f "$CLAUDE_DIR/settings.json" ]; then
-    current_model=$(grep -o '"model"[[:space:]]*:[[:space:]]*"[^"]*"' "$CLAUDE_DIR/settings.json" | cut -d'"' -f4)
-    declare -A enabled_plugins
     for plugin in "${plugins[@]}"; do
         if grep -q "\"$plugin@claude-plugins-official\"[[:space:]]*:[[:space:]]*true" "$CLAUDE_DIR/settings.json"; then
             enabled_plugins[$plugin]=true
@@ -118,7 +117,6 @@ if [ -f "$CLAUDE_DIR/settings.json" ]; then
         fi
     done
 else
-    current_model="haiku"
     for plugin in "${plugins[@]}"; do
         enabled_plugins[$plugin]=false
     done
@@ -201,7 +199,6 @@ while true; do
 done
 
 echo ""
-model_choice="$current_model"
 
 # Track installation results
 declare -a installed_files=()
@@ -229,7 +226,6 @@ fi
 # Generate settings.json to temp file first
 cat > "$TMP_DIR/settings.json" << EOF
 {
-  "model": "$model_choice",
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh"
